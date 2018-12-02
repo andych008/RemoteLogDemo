@@ -1,12 +1,17 @@
-package wang.catuncle.remotelogdemo;
+package wang.catunclue.wslog;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 
-
-public class MonitorLogcat {
+/**
+ * monitor logcat output
+ *
+ * @author 喵叔catuncle
+ * Created at 2018/12/2 15:56
+ */
+class MonitorLogcat {
 
     private static MonitorLogcat sLogcatRunner;
 
@@ -23,21 +28,8 @@ public class MonitorLogcat {
         return sLogcatRunner;
     }
 
-
-    private MonitorLogcat() {
-
-    }
-
     public void start(LogcatOutputCallback logcatOutputCallback) {
-        try {
-            if (mLogcatThread != null && mLogcatThread.isAlive()) {
-                mLogcatThread.stopReader();
-                mLogcatThread.setOutputCallback(null);
-                mLogcatThread.interrupt();
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        doStop();
         mLogcatThread = new ShellProcessThread();
         mLogcatThread.setOutputCallback(logcatOutputCallback);
         mLogcatThread.start();
@@ -45,10 +37,17 @@ public class MonitorLogcat {
     }
 
     public void stop() {
+        doStop();
+    }
+
+    private MonitorLogcat() {
+    }
+
+    private void doStop() {
         try {
             if (mLogcatThread != null && mLogcatThread.isAlive()) {
-                mLogcatThread.stopReader();
                 mLogcatThread.setOutputCallback(null);
+                mLogcatThread.stopReader();
                 mLogcatThread.interrupt();
             }
         } catch (Exception e) {
@@ -56,13 +55,12 @@ public class MonitorLogcat {
         }
     }
 
-
     private static class ShellProcessThread extends Thread {
 
         private volatile boolean readerLogging = true;
         private LogcatOutputCallback mOutputCallback;
 
-        public void setOutputCallback(LogcatOutputCallback outputCallback) {
+        void setOutputCallback(LogcatOutputCallback outputCallback) {
             mOutputCallback = outputCallback;
         }
 
@@ -79,16 +77,13 @@ public class MonitorLogcat {
                 reader = new BufferedReader(new InputStreamReader(inputStream));
                 while (readerLogging) {
                     String line = reader.readLine();
-                    if (mOutputCallback != null) {
+                    if (mOutputCallback != null && line != null) {
                         mOutputCallback.onReaderLine(line);
                     }
-
                 }
-
             } catch (Exception e) {
                 e.printStackTrace();
             } finally {
-
                 try {
                     if (reader != null) {
                         reader.close();
@@ -111,10 +106,9 @@ public class MonitorLogcat {
             }
         }
 
-        public void stopReader() {
+        void stopReader() {
             readerLogging = false;
         }
-
     }
 
     public interface LogcatOutputCallback {
