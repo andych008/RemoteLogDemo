@@ -1,0 +1,21 @@
+apply plugin: 'maven'
+
+ext {// ext is a gradle closure allowing the declaration of global properties
+    PUBLISH_GROUP_ID = 'wang.catunclue'
+    PUBLISH_ARTIFACT_ID = project.name
+    PUBLISH_VERSION = android.defaultConfig.versionName
+}
+
+uploadArchives {
+    repositories.mavenDeployer {
+        def localMavenRepo = 'file://' + new File(rootDir.parentFile, 'dwvipRepo').absolutePath
+//        println "localMavenRepo = ${localMavenRepo}"
+        repository(url: localMavenRepo)
+
+        pom.project {
+            groupId project.PUBLISH_GROUP_ID
+            artifactId project.PUBLISH_ARTIFACT_ID
+            version project.PUBLISH_VERSION
+        }
+    }
+}

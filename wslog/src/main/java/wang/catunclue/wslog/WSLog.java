@@ -1,5 +1,8 @@
 package wang.catunclue.wslog;
 
+import android.os.Handler;
+import android.os.HandlerThread;
+import android.os.Message;
 import android.util.Log;
 
 import okhttp3.OkHttpClient;
@@ -16,6 +19,14 @@ import okhttp3.WebSocketListener;
  */
 public class WSLog {
     private static final String TAG = WSLog.class.getSimpleName();
+    private interface Msg {
+        int OPEN = 1;
+        int CLOSE = 2;
+    }
+
+
+    private HandlerThread workerThread;
+    private Handler workHandler;
     private OkHttpClient mOkHttpClient;
     private WebSocket mWebSocket;
     private String wsUrl;
@@ -27,22 +38,34 @@ public class WSLog {
 
     public void init(String wsUrl) {
         this.wsUrl = wsUrl;
+        workerThread = new HandlerThread("WSLog-thread");
+        workerThread.start();
+        workHandler = new Handler(workerThread.getLooper()) {
+            @Override
+            public void handleMessage(Message msg) {
+                if (msg.what==Msg.OPEN) {
+                    connectWS();
+                    MonitorLogcat.getInstance().start(new MonitorLogcat.LogcatOutputCallback() {
+                        @Override
+                        public void onReaderLine(String line) {
+                            if (mWebSocket != null && !closing) {
+                                mWebSocket.send(line);
+                            }
+                        }
+                    });
+                } else if (msg.what==Msg.CLOSE) {
+                    MonitorLogcat.getInstance().stop();
+                    disconnectWS();
+                }
+            }
+        };
     }
 
     public void setEnable(boolean b) {
         if (b) {
-            connectWS();
-            MonitorLogcat.getInstance().start(new MonitorLogcat.LogcatOutputCallback() {
-                @Override
-                public void onReaderLine(String line) {
-                    if (mWebSocket != null && !closing) {
-                        mWebSocket.send(line);
-                    }
-                }
-            });
+            workHandler.sendEmptyMessage(Msg.OPEN);
         } else {
-            MonitorLogcat.getInstance().stop();
-            disconnectWS();
+            workHandler.sendEmptyMessage(Msg.CLOSE);
         }
     }
 
@@ -71,7 +94,7 @@ public class WSLog {
 
                     @Override
                     public void onMessage(WebSocket webSocket, String text) {
-                        Log.i(TAG, "onMessage---------------------------"+text);
+                        Log.i(TAG, "onMessage---------------------------" + text);
                     }
 
                     @Override
@@ -86,7 +109,7 @@ public class WSLog {
 
                     @Override
                     public void onFailure(WebSocket webSocket, Throwable t, Response response) {
-                        Log.i(TAG, "onFailure---------------------------"+response, t);
+                        Log.i(TAG, "onFailure---------------------------" + response, t);
                     }
                 });
     }
@@ -98,7 +121,8 @@ public class WSLog {
         }
         if (mWebSocket != null) {
 //            mWebSocket.cancel();
-            mWebSocket.close(1000, "normal");
+            boolean b = mWebSocket.close(1000, "NORMAL");
+            Log.i(TAG, "mWebSocket.close = "+b);
             mWebSocket = null;
         }
     }
