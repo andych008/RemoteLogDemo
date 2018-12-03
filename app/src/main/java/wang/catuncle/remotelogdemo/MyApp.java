@@ -6,7 +6,8 @@ import wang.catunclue.wslog.WSLog;
 
 public class MyApp extends Application {
 
-    private static final String wsUrl = "ws://192.168.1.112:8999";
+    // TODO: 请修改成你自己的ws服务地址
+    private static final String wsUrl = "ws://wslog.leanapp.cn/ws";
 
     @Override
     public void onCreate() {
