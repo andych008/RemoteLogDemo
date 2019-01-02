@@ -14,5 +14,5 @@ repositories {
     maven { url 'https://dwvip.github.io/repo' }
 }
 
-implementation 'wang.catunclue:wslog:0.1'
+implementation 'wang.catunclue:wslog:0.1.5'
 ```
