@@ -5,6 +5,9 @@
 
 配合[log-client](https://github.com/andych008/log-client)、[log-server](https://github.com/andych008/log-server)一起使用。
 
+## 原理
+[Android RemoteLog(远程查看日志)](https://unclecat.wang/posts/571c1dd7.html)
+
 
 ## configure this dependency
 --------
