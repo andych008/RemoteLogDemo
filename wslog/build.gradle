@@ -1,13 +1,13 @@
 apply plugin: 'com.android.library'
 
 android {
-    compileSdkVersion 26
+    compileSdkVersion 28
 
 
     publishNonDefault true
     defaultConfig {
         minSdkVersion 15
-        targetSdkVersion 19
+        targetSdkVersion 28
         versionCode 1
         versionName "0.1.5"
         consumerProguardFiles 'consumer-proguard-rules.pro'
